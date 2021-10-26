@@ -1,0 +1,5 @@
+__pycache__
+checkpoints/
+datafiles/
+pretrained_depth_ckpt/
+test_results/

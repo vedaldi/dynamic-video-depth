@@ -12,5 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-depth_pretrain_path = './pretrained_depth_ckpt/best_depth_Ours_Bilinear_inc_3_net_G.pth'
-midas_pretrain_path = './pretrained_depth_ckpt/midas_cpkt.pt'
+import os
+
+root = os.path.join(os.path.dirname(__file__), '..')
+
+depth_pretrain_path = os.path.join(root, './pretrained_depth_ckpt/best_depth_Ours_Bilinear_inc_3_net_G.pth')
+midas_pretrain_path = os.path.join(root, './pretrained_depth_ckpt/midas_cpkt.pt')
