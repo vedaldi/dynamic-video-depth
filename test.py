@@ -18,12 +18,12 @@ import time
 from shutil import rmtree
 from tqdm import tqdm
 import torch
-from options import options_test
-import datasets
-import models
-from util.util_print import str_error, str_stage, str_verbose
-import util.util_loadlib as loadlib
-from loggers import loggers
+from .options import options_test
+from . import datasets
+from . import models
+from .util.util_print import str_error, str_stage, str_verbose
+from .util import util_loadlib as loadlib
+from .loggers import loggers
 from argparse import Namespace
 print("Testing Pipeline")
 

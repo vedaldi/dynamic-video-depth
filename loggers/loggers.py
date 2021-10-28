@@ -16,7 +16,7 @@ import os
 import csv
 from collections import OrderedDict, defaultdict
 import numpy as np
-from util.util_print import str_error, str_warning
+from ..util.util_print import str_error, str_warning
 from .Progbar import Progbar
 import json
 from os.path import join, dirname

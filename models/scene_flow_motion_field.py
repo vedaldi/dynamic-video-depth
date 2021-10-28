@@ -13,17 +13,17 @@
 # limitations under the License.
 
 import torch
-from models.video_base import VideoBaseModel
-from third_party.hourglass import HourglassModel_Embed
-from third_party.MiDaS import MidasNet
-from visualize.html_visualizer import HTMLVisualizer as Visualizer
+from ..models.video_base import VideoBaseModel
+from ..third_party.hourglass import HourglassModel_Embed
+from ..third_party.MiDaS import MidasNet
+from ..visualize.html_visualizer import HTMLVisualizer as Visualizer
 import torch.nn.functional as F
 import inspect
 from functools import partial
-from configs import depth_pretrain_path, midas_pretrain_path
-from losses.scene_flow_projection import scene_flow_projection_slack, flow_by_depth, BackwardWarp, unproject_ptcld
-from networks.FCNUnet import FCNUnet
-from networks.sceneflow_field import SceneFlowFieldNet
+from ..configs import depth_pretrain_path, midas_pretrain_path
+from ..losses.scene_flow_projection import scene_flow_projection_slack, flow_by_depth, BackwardWarp, unproject_ptcld
+from ..networks.FCNUnet import FCNUnet
+from ..networks.sceneflow_field import SceneFlowFieldNet
 import numpy as np
 from os.path import join
 from os import makedirs
@@ -257,7 +257,7 @@ class Model(VideoBaseModel):
             flow_data_input['sflow_2_1'] = sf_1_2.permute(0, 2, 3, 1)[..., None, :]
             flow_data_input['flow_1_2'] = self._input.flow_1_2
             flow_data_input['flow_2_1'] = self._input.flow_2_1
-            result = self.warp(**flow_data_input)
+            result = self.warp(**flow_data_input) # depth_warp_1_2: depth_2 -> to frame 1
             result['sf_1_2'] = sf_1_2
             result['global_p1'] = global_p1
 

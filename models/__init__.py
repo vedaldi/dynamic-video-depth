@@ -16,5 +16,5 @@ import importlib
 
 
 def get_model(alias, test=False):
-    module = importlib.import_module('models.' + alias)
+    module = importlib.import_module('.' + alias, __name__)
     return module.Model

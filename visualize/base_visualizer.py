@@ -16,7 +16,7 @@ from torch.multiprocessing import Pool
 from os.path import join, dirname
 from os import makedirs
 import atexit
-from util.util_config import get_project_config
+from ..util.util_config import get_project_config
 
 
 class BaseVisualizer():

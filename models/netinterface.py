@@ -18,8 +18,8 @@ import torch.optim as optim
 from torch.nn import init
 import torch
 from torch import FloatTensor, tensor
-from loggers.loggers import _LogCumulator
-from util.util_print import str_warning
+from ..loggers.loggers import _LogCumulator
+from ..util.util_print import str_warning
 import torch.distributed as dist
 
 

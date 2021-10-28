@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import numpy as np
-from third_party.util_colormap import heatmap_to_pseudo_color
+from ..third_party.util_colormap import heatmap_to_pseudo_color
 KEYWORDS = ['depth', 'edgegradient', 'flow', 'img', 'rgb', 'image', 'edge', 'contour', 'softmask']
 
 

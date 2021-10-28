@@ -16,5 +16,5 @@ import importlib
 
 
 def get_dataset(alias):
-    dataset_module = importlib.import_module('datasets.' + alias.lower())
+    dataset_module = importlib.import_module('.' + alias.lower(), __name__)
     return dataset_module.Dataset

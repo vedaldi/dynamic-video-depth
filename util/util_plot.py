@@ -14,7 +14,7 @@
 
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
-from third_party.util_colormap import turbo_colormap_data
+from ..third_party.util_colormap import turbo_colormap_data
 import matplotlib
 from matplotlib.colors import ListedColormap
 

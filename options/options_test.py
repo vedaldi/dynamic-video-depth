@@ -14,8 +14,8 @@
 
 import sys
 import argparse
-from datasets import get_dataset
-from models import get_model
+from ..datasets import get_dataset
+from ..models import get_model
 
 
 def add_general_arguments(parser):
@@ -56,7 +56,7 @@ def add_general_arguments(parser):
     return parser
 
 
-def parse(add_additional_arguments=None):
+def parse(add_additional_arguments=None, args=None):
     parser = argparse.ArgumentParser()
     parser = add_general_arguments(parser)
     if add_additional_arguments:
@@ -73,5 +73,5 @@ def parse(add_additional_arguments=None):
     if '--printhelp' in sys.argv:
         sys.argv.append('-h')
 
-    opt = parser.parse_args()
+    opt = parser.parse_args(args=args)
     return opt

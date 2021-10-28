@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from util.util_visualize import convert2rgb, is_key_image
+from ..util.util_visualize import convert2rgb, is_key_image
 from torch.multiprocessing import Pool
-from util.util_flow import flow2img
+from ..util.util_flow import flow2img
 from os.path import join
 import atexit
 import numpy as np

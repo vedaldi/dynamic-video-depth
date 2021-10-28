@@ -15,9 +15,9 @@
 import sys
 import argparse
 import torch
-from util.util_print import str_warning
-from datasets import get_dataset
-from models import get_model
+from ..util.util_print import str_warning
+from ..datasets import get_dataset
+from ..models import get_model
 
 
 def add_general_arguments(parser):
@@ -162,13 +162,13 @@ def overwrite(opt, opt_f_old, unique_params):
     return opt
 
 
-def parse(add_additional_arguments=None):
+def parse(add_additional_arguments=None, args=None):
     parser = argparse.ArgumentParser()
     parser, unique_params = add_general_arguments(parser)
     if add_additional_arguments is not None:
         parser, unique_params_additional = add_additional_arguments(parser)
         unique_params = unique_params.union(unique_params_additional)
-    opt_general, _ = parser.parse_known_args()
+    opt_general, _ = parser.parse_known_args(args=args)
     dataset_name, net_name = opt_general.dataset, opt_general.net
     del opt_general
 
@@ -181,7 +181,7 @@ def parse(add_additional_arguments=None):
     if '--printhelp' in sys.argv:
         sys.argv.append('-h')
 
-    opt, unknown = parser.parse_known_args()
+    opt, unknown = parser.parse_known_args(args=args)
     if len(unknown) > 0:
         print(str_warning, f'ignoring unknown argument {unknown}')
     unique_params = unique_params.union(unique_params_dataset)

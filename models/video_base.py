@@ -15,12 +15,12 @@
 from os.path import join, dirname
 import numpy as np
 import torch
-from models.netinterface import NetInterface
+from ..models.netinterface import NetInterface
 from os import makedirs
 import matplotlib.pyplot as plt
 import matplotlib.cm
 from matplotlib.colors import ListedColormap
-from third_party.util_colormap import turbo_colormap_data
+from ..third_party.util_colormap import turbo_colormap_data
 # matplotlib.cm.register_cmap('turbo', cmap=ListedColormap(turbo_colormap_data))
 import matplotlib
 import shutil
@@ -158,7 +158,7 @@ class VideoBaseModel(NetInterface):
 
         # make test video:
         from subprocess import call
-        from util.util_html import Webpage
+        from dvd.util.util_html import Webpage
         from tqdm import tqdm
         depth_pred = []
         depth_nn = []

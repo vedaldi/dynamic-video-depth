@@ -16,22 +16,22 @@ import sys
 import os
 import time
 import torch
-from options import options_train
-import datasets
-import models
-from loggers import loggers
-from util.util_print import str_error, str_stage, str_verbose, str_warning
-from util import util_loadlib as loadlib
+from .options import options_train
+from . import datasets
+from . import models
+from .loggers import loggers
+from .util.util_print import str_error, str_stage, str_verbose, str_warning
+from .util import util_loadlib as loadlib
 import pandas as pd
 import torch.multiprocessing as mp
 import torch.distributed as dist
 
 
-def main():
+def main(args=None):
 
     # Option Parsing
     print(str_stage, "Parsing arguments")
-    opt, unique_opt_params = options_train.parse()
+    opt, unique_opt_params = options_train.parse(args=args)
     # Get all parse done, including subparsers
     print(opt)
     # Setting up log directory
