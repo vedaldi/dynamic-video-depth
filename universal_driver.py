@@ -8,41 +8,84 @@ from skimage.transform import resize as imresize
 gaps = [1, 2, 4, 6, 8]
 
 
-def load(out_dir, dry_run=False):
+def load_index(out_dir):
+    index_path = os.path.join(out_dir, "preproc", "index.npz")
+    return np.load(index_path)
+
+
+
+def load_frame(out_dir, fid, index=None, dry_run=False):
+    if index is None:
+        index = load_index(out_dir)
+
     depth_dir = os.path.join(
         out_dir,
         "testscene_flow_motion_field_universal_sequence_default",
         "epoch0020_test",
     )
 
-    index_path = os.path.join(out_dir, "preproc", "index.npz")
-    if dry_run and not os.path.exists(index_path):
-        return None
-    index = np.load(index_path)
-    fids = index["fids"]
     H = index["height"]
     W = index["width"]
     scale = index["scale"]
 
-    def resize(x):
+    i = np.nonzero(index['fids'] == fid)[0].item()
+    batch_path = os.path.join(depth_dir, f"batch{i:04d}.npz")
+    if not dry_run:
+        batch = np.load(batch_path)
+        x = batch["depth"].squeeze(0)
         x = np.transpose(x, (1, 2, 0))
         x = imresize(x, (H, W), preserve_range=True).astype(np.float32)
-        return np.transpose(x, (2, 0, 1)) / scale
-
-    depth = []
-    for i, fid in enumerate(fids):
-        batch_path = os.path.join(depth_dir, f"batch{i:04d}.npz")
+        x = np.transpose(x, (2, 0, 1)) / scale
+    else:
         if not os.path.exists(batch_path):
-            return None
-        if not dry_run:
-            batch = np.load(batch_path)
-            x = batch["depth"].squeeze(0)
-            x = resize(x)
-            depth.append(x)
-        else:
-            depth.append(True)
+            raise FileNotFoundError()
+        x = True
 
-    return np.concatenate(depth)
+    return x
+
+
+def load(out_dir, dry_run=False):
+    try:
+        depth = []
+        index = load_index(out_dir)
+        for i, fid in enumerate(index["fids"]):
+            depth.append(load_frame(out_dir, fid, index=index, dry_run=dry_run))
+        if not dry_run:
+            depth = np.concatenate(depth)
+        return {"depth": depth, "fids": index["fids"]}
+
+    except FileNotFoundError:
+        if dry_run:
+            return None
+        raise
+
+    # fids = index["fids"]
+    # H = index["height"]
+    # W = index["width"]
+    # scale = index["scale"]
+
+    # def resize(x):
+    #     x = np.transpose(x, (1, 2, 0))
+    #     x = imresize(x, (H, W), preserve_range=True).astype(np.float32)
+    #     return np.transpose(x, (2, 0, 1)) / scale
+
+    # depth = []
+    # for i, fid in enumerate(fids):
+    #     batch_path = os.path.join(depth_dir, f"batch{i:04d}.npz")
+    #     if not os.path.exists(batch_path):
+    #         return None
+    #     if not dry_run:
+    #         batch = np.load(batch_path)
+    #         x = batch["depth"].squeeze(0)
+    #         x = resize(x)
+    #         depth.append(x)
+    #     else:
+    #         depth.append(True)
+
+    # if not dry_run:
+    #     depth = np.concatenate(depth)
+
+    # return {"depth": depth, "fids": fids}
 
 
 def run(dataloader, out_dir, resume=False):
