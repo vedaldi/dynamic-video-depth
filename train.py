@@ -353,10 +353,10 @@ def main_worker(local_rank, ngpus, opt):
         with open(opt.test_template) as f:
             cmd = f.readlines()[0]
         cmd = cmd.format(suffix_expand=opt.suffix.format(**vars(opt)), **vars(opt))
-        from subprocess import call
+        from subprocess import check_call
         with open(os.path.join(opt.full_logdir, 'test_cmd.sh'), 'w') as f:
             f.write(cmd)
-        call(cmd, shell=True)
+        check_call(cmd, shell=True)
 
 
 if __name__ == '__main__':
