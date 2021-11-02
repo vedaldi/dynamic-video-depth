@@ -352,7 +352,11 @@ def main_worker(local_rank, ngpus, opt):
         torch.cuda.empty_cache()
         with open(opt.test_template) as f:
             cmd = f.readlines()[0]
-        cmd = cmd.format(suffix_expand=opt.suffix.format(**vars(opt)), **vars(opt))
+        cmd = cmd.format(
+            suffix_expand=opt.suffix.format(**vars(opt)),
+            python_bin=sys.executable,
+            **vars(opt)
+        )
         from subprocess import check_call
         with open(os.path.join(opt.full_logdir, 'test_cmd.sh'), 'w') as f:
             f.write(cmd)

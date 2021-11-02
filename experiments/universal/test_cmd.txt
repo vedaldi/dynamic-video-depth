@@ -1,1 +1,1 @@
-python -m dvd.test --net {net} --dataset {dataset} --workers 4 --output_dir '{data_dir}/../test' --epoch {epoch} --html_logger --batch_size 1 --gpu {gpu} --data_dir {data_dir} --suffix 'default' --checkpoint_path {full_logdir}
+{python_bin} -m dvd.test --net {net} --dataset {dataset} --workers 4 --output_dir '{data_dir}/../test' --epoch {epoch} --html_logger --batch_size 1 --gpu {gpu} --data_dir {data_dir} --suffix 'default' --checkpoint_path {full_logdir}
