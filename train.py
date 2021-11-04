@@ -113,6 +113,26 @@ def main(args=None):
         opt.global_rank = 0
         main_worker(None, 1, opt=opt)
 
+    # Spawn testing
+    if opt.test_template is not None:
+        import gc
+        gc.collect()
+        torch.cuda.empty_cache()
+        # pytorch still holds on to ~800MB of GPU mem for the cached
+        # kernels (context). This mem can only be freed by shutting down this
+        # process. This will require a differnet testing mechanism.
+        with open(opt.test_template) as f:
+            cmd = f.readlines()[0]
+        cmd = cmd.format(
+            suffix_expand=opt.suffix.format(**vars(opt)),
+            python_bin=sys.executable,
+            **vars(opt)
+        )
+        from subprocess import check_call
+        with open(os.path.join(opt.full_logdir, 'test_cmd.sh'), 'w') as f:
+            f.write(cmd)
+        check_call(cmd, shell=True)
+
 
 def main_worker(local_rank, ngpus, opt):
     logdir = opt.full_logdir
@@ -149,7 +169,7 @@ def main_worker(local_rank, ngpus, opt):
     _safe_print(str_stage, "Setting up loggers")
     if opt.resume != 0 and os.path.isfile(os.path.join(logdir, 'best.pt')):
         try:
-            prev_best_data = torch.load(os.path.join(logdir, 'best.pt'))
+            prev_best_data = torch.load(os.path.join(logdir, 'best.pt')) ## AV
             prev_best = prev_best_data['loss_eval']
             del prev_best_data
         except KeyError:
@@ -253,7 +273,7 @@ def main_worker(local_rank, ngpus, opt):
                                       "Starting from scratch") % opt.resume)
         else:
             # if global_rank == 0:
-            additional_values = model.load_state_dict(
+            additional_values = model.load_state_dict( ## AV
                 net_filename, load_optimizer='auto')
             try:
                 initial_epoch += additional_values['epoch']
@@ -347,20 +367,7 @@ def main_worker(local_rank, ngpus, opt):
             train_epoch_callback=call_back
         )
 
-    if opt.test_template is not None:
-        del model
-        torch.cuda.empty_cache()
-        with open(opt.test_template) as f:
-            cmd = f.readlines()[0]
-        cmd = cmd.format(
-            suffix_expand=opt.suffix.format(**vars(opt)),
-            python_bin=sys.executable,
-            **vars(opt)
-        )
-        from subprocess import check_call
-        with open(os.path.join(opt.full_logdir, 'test_cmd.sh'), 'w') as f:
-            f.write(cmd)
-        check_call(cmd, shell=True)
+
 
 
 if __name__ == '__main__':
