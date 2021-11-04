@@ -13,7 +13,6 @@ def load_index(out_dir):
     return np.load(index_path)
 
 
-
 def load_frame(out_dir, fid, index=None, dry_run=False):
     if index is None:
         index = load_index(out_dir)
@@ -28,7 +27,7 @@ def load_frame(out_dir, fid, index=None, dry_run=False):
     W = index["width"]
     scale = index["scale"]
 
-    i = np.nonzero(index['fids'] == fid)[0].item()
+    i = np.nonzero(index["fids"] == fid)[0].item()
     batch_path = os.path.join(depth_dir, f"batch{i:04d}.npz")
     if not dry_run:
         batch = np.load(batch_path)
@@ -59,36 +58,8 @@ def load(out_dir, dry_run=False):
             return None
         raise
 
-    # fids = index["fids"]
-    # H = index["height"]
-    # W = index["width"]
-    # scale = index["scale"]
 
-    # def resize(x):
-    #     x = np.transpose(x, (1, 2, 0))
-    #     x = imresize(x, (H, W), preserve_range=True).astype(np.float32)
-    #     return np.transpose(x, (2, 0, 1)) / scale
-
-    # depth = []
-    # for i, fid in enumerate(fids):
-    #     batch_path = os.path.join(depth_dir, f"batch{i:04d}.npz")
-    #     if not os.path.exists(batch_path):
-    #         return None
-    #     if not dry_run:
-    #         batch = np.load(batch_path)
-    #         x = batch["depth"].squeeze(0)
-    #         x = resize(x)
-    #         depth.append(x)
-    #     else:
-    #         depth.append(True)
-
-    # if not dry_run:
-    #     depth = np.concatenate(depth)
-
-    # return {"depth": depth, "fids": fids}
-
-
-def run(dataloader, out_dir, resume=False):
+def run(dataloader, out_dir, resume=False, use_motion_mask=False):
     preproc_dir = os.path.join(out_dir, "preproc")
     checkpoint_dir = os.path.join(out_dir, "checkpoints", "0")
     test_script_path = os.path.join(
@@ -133,14 +104,15 @@ def run(dataloader, out_dir, resume=False):
         "--gaps", ','.join([str(gap) for gap in gaps]),
         "--midas",
         "--use_disp",
-        # "--use_motion_seg",  # av
         "--full_logdir", checkpoint_dir,
         "--test_template", test_script_path,
         "--resume", "-1" if resume else "0",  # resume from the last epoch
-        "--force_overwrite",  #
-        # "--pt_no_overwrite", # when resuming, do not overwrite the new options with the saved ones
+        "--force_overwrite",
     ]
     # fmt: on
+
+    if use_motion_mask:
+        args.append("--use_motion_seg")
 
     # mp.set_start_method('spawn', force=True)
     train.main(args=args)
