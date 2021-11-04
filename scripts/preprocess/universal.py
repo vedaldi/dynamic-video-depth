@@ -1,6 +1,5 @@
 import argparse
 import os
-from re import A
 import cv2
 import dvd
 import numpy as np
@@ -22,7 +21,6 @@ W_midas = 384
 # Preprocess depth
 # --------------------------------------------------------------------
 #
-
 
 
 def _load_depth(out_dir, fid):
@@ -57,11 +55,12 @@ def _pytorch_camera_to_dvd(camera, s, W, H):
 
     for t in range(N):
         # PyTorch camera intrinsics
-        # s = W / H
         f = camera[t].focal_length.cpu().numpy()
         assert s >= 1
-        assert f[0] == f[1]
+        assert f[0] == f[1], "Non-square pixels detected, must be a bug"
+
         f = f[0]
+
         c = camera[t].principal_point.cpu().numpy()
         K = np.array(
             [
@@ -89,7 +88,7 @@ def _pytorch_camera_to_dvd(camera, s, W, H):
     return K__, R__, T__
 
 
-def _process_depth(dataloader, out_dir, resume):
+def _process_depth(dataloader, out_dir, rescale_depth_using_masked_region, resume):
     depth_dir = os.path.join(out_dir, "depth")
     os.makedirs(depth_dir, exist_ok=True)
     model = None
@@ -105,6 +104,7 @@ def _process_depth(dataloader, out_dir, resume):
 
     print("Generating depth")
     index_path = os.path.join(out_dir, "index.npz")
+    resume=False
     if resume and os.path.exists(index_path):
         return
 
@@ -161,8 +161,15 @@ def _process_depth(dataloader, out_dir, resume):
     print("Rescaling depth")
     scales = []
     for i in tqdm(range(len(depth_pred))):
-        scales.append(np.median(depth_pred[i] / depth_gt[i]))
+        if rescale_depth_using_masked_region:
+            m = (mask[i].ravel() > 0)
+        else:
+            m = slice(None, None)
+        this_scale = np.median(depth_pred[i].ravel()[m] / depth_gt[i].ravel()[m])
+        scales.append(this_scale)
     scale = np.mean(scales)
+
+    assert not np.isnan(scale)
 
     def resize(x):
         x = np.transpose(x, (1, 2, 0))
@@ -426,7 +433,13 @@ def _process_batches(out_dir, gaps, resume):
 # --------------------------------------------------------------------
 
 
-def preprocess(dataloader, out_dir, gaps=default_gaps, resume=False):
+def preprocess(
+    dataloader,
+    out_dir,
+    gaps=default_gaps,
+    rescale_depth_using_masked_region=False,
+    resume=False,
+):
     """
     `dataloader` must provide frame dicts with fields:
 
@@ -436,7 +449,12 @@ def preprocess(dataloader, out_dir, gaps=default_gaps, resume=False):
     - ``:
 
     """
-    _process_depth(dataloader, out_dir, resume=resume)
+    _process_depth(
+        dataloader,
+        out_dir,
+        rescale_depth_using_masked_region=rescale_depth_using_masked_region,
+        resume=resume,
+    )
     _process_flow(out_dir, gaps=gaps, resume=resume)
     _process_batches(out_dir, gaps=gaps, resume=resume)
     return None

@@ -59,14 +59,26 @@ def load(out_dir, dry_run=False):
         raise
 
 
-def run(dataloader, out_dir, resume=False, use_motion_mask=False):
+def run(
+    dataloader,
+    out_dir,
+    resume=False,
+    rescale_depth_using_masked_region=False,
+    use_motion_mask=False,
+):
     preproc_dir = os.path.join(out_dir, "preproc")
     checkpoint_dir = os.path.join(out_dir, "checkpoints", "0")
     test_script_path = os.path.join(
         os.path.dirname(__file__), "experiments/universal/test_cmd.txt"
     )
 
-    preprocess(dataloader, preproc_dir, gaps=gaps, resume=resume)
+    preprocess(
+        dataloader,
+        preproc_dir,
+        gaps=gaps,
+        rescale_depth_using_masked_region=rescale_depth_using_masked_region,
+        resume=resume,
+    )
 
     # fmt: off
     args = [
