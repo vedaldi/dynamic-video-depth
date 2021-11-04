@@ -3,3 +3,5 @@ checkpoints/
 datafiles/
 pretrained_depth_ckpt/
 test_results/
+*.egg-info
+
