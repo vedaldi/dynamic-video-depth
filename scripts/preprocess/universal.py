@@ -1,6 +1,7 @@
 import argparse
 import os
 import cv2
+import math
 import dvd
 import numpy as np
 from tqdm import tqdm
@@ -13,9 +14,7 @@ from skimage.transform import resize as imresize
 
 # Gaps between frames for flow computation
 default_gaps = [1, 2, 3, 4, 5, 6, 7, 8]
-
-H_midas = 192
-W_midas = 384
+dvd_max_area = 320 * 256
 
 # --------------------------------------------------------------------
 # Preprocess depth
@@ -88,6 +87,28 @@ def _pytorch_camera_to_dvd(camera, s, W, H):
     return K__, R__, T__
 
 
+def _get_dvd_size(W, H, multiple=64, max_area=dvd_max_area):
+    M = max_area / multiple ** 2
+    h = (-1 + math.sqrt(1 + 4 * (W / H) * M)) / (2 * W / H)
+    w = round(W / H * h)
+    h = round(h)
+    W_ = w * multiple
+    H_ = h * multiple
+    return W_, H_
+
+
+def _get_midas_size(W, H):
+    max_W = 384
+    multiple = 64
+    if W > max_W:
+        sc = max_W / W
+        W_midas = max_W
+    else:
+        W_midas = W
+    H_midas = int(np.round((H * sc) / multiple) * multiple)
+    return W_midas, H_midas
+
+
 def _process_depth(dataloader, out_dir, rescale_depth_using_masked_region, resume):
     depth_dir = os.path.join(out_dir, "depth")
     os.makedirs(depth_dir, exist_ok=True)
@@ -104,7 +125,6 @@ def _process_depth(dataloader, out_dir, rescale_depth_using_masked_region, resum
 
     print("Generating depth")
     index_path = os.path.join(out_dir, "index.npz")
-    resume=False
     if resume and os.path.exists(index_path):
         return
 
@@ -112,26 +132,22 @@ def _process_depth(dataloader, out_dir, rescale_depth_using_masked_region, resum
         fids.extend(batch["frame_number"].tolist())
 
         H, W = batch["image_rgb"].shape[2:]
-        # H_midas = 256
-        # step = 32
-        # W_midas = (((round(W * (H_midas / H)) - 1) // step) + 1) * step
 
-        # Target size for processing by DVD
-        # Note that this resamples pixels so that they are not square anymore
-        max_W = 384
-        multiple = 64
-        if W > max_W:
-            sc = max_W / W
-            W_dvd = max_W
-        else:
-            W_dvd = W
-        H_dvd = int(np.round((H * sc) / multiple) * multiple)
+        # MiDAS is trained with:
+        #
+        # - Larger size = 384
+        # - Other size = multiple 32
+        #
+        # However, to avoid out of memory, DVD runs with a resolution that keeps
+        # images within a certain area.
+
+        W_dvd, H_dvd = _get_dvd_size(W, H)
 
         if model is None:
             model = MidasNet(
                 midas_pretrain_path,
                 non_negative=True,
-                resize=(H_midas, W_midas),
+                resize=(H_dvd, W_dvd),
                 normalize_input=True,
             )
             model.eval()
@@ -162,7 +178,7 @@ def _process_depth(dataloader, out_dir, rescale_depth_using_masked_region, resum
     scales = []
     for i in tqdm(range(len(depth_pred))):
         if rescale_depth_using_masked_region:
-            m = (mask[i].ravel() > 0)
+            m = mask[i].ravel() > 0
         else:
             m = slice(None, None)
         this_scale = np.median(depth_pred[i].ravel()[m] / depth_gt[i].ravel()[m])
@@ -283,10 +299,11 @@ def _get_flow(net, out_dir, fid1, fid2):
     H, W = image1_rgb.shape[1:]
 
     def resize(x):
+        W_raft, H_raft = _get_dvd_size(W, H, multiple=32, max_area=288 * 512)
         x = np.transpose(x.detach().cpu().numpy(), (1, 2, 0))
-        x = imresize(x, [288, 512], anti_aliasing=True) * 255
+        x = imresize(x, [H_raft, W_raft], anti_aliasing=True) * 255
         x = np.transpose(x, (2, 0, 1))
-        return torch.FloatTensor(x)  # .to(device)
+        return torch.FloatTensor(x)
 
     resized1 = resize(image1_rgb)
     resized2 = resize(image2_rgb)

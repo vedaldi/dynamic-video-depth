@@ -273,7 +273,7 @@ def main_worker(local_rank, ngpus, opt):
                                       "Starting from scratch") % opt.resume)
         else:
             # if global_rank == 0:
-            additional_values = model.load_state_dict( ## AV
+            additional_values = model.load_state_dict(
                 net_filename, load_optimizer='auto')
             try:
                 initial_epoch += additional_values['epoch']
