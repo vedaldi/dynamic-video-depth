@@ -157,7 +157,7 @@ def _process_depth(dataloader, out_dir, rescale_depth_using_masked_region, resum
 
         image_rgb.append(batch["image_rgb"].detach().cpu().numpy())
         depth_gt.append(batch["depth_map"].detach().cpu().numpy())
-        mask.append(batch["depth_mask"].detach().cpu().numpy())
+        mask.append((batch["fg_probability"] > 0.5).float().detach().cpu().numpy())
 
         # Convert cameras
         cam = _pytorch_camera_to_dvd(batch["camera"], W / H, W=W_dvd, H=H_dvd)
